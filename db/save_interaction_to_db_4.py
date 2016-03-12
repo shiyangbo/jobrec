@@ -19,7 +19,7 @@ def seek_hstor(csv_file_path, off_set):
         Row = namedtuple("Row", headers)
 
         conn = pymysql.connect(host='127.0.0.1', port=3306, user='root',
-                    passwd='shi520shi', db='xing',charset='UTF8')
+                    passwd='root', db='xing',charset='UTF8')
         cur=conn.cursor()
 
         line = 0
@@ -59,7 +59,7 @@ script, csv_file_path = argv
 # off_set设为(line-10000), line为上次中断显示的最后行数
 st_line = seek_hstor(csv_file_path, off_set=3970000)
 
-conn = pymysql.connect(host='127.0.0.1',port=3306,user='root',passwd='shi520shi',
+conn = pymysql.connect(host='127.0.0.1',port=3306,user='root',passwd='root',
         db='xing',charset='UTF8')
 cur=conn.cursor()
 
