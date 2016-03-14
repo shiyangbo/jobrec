@@ -4,6 +4,8 @@ Created on Thu Mar  3 12:01:31 2016
 
 @author: liwj0
 """
+# 往长度是300万的表里插入数据，速度大约：2.5min / 每1万条
+# 往长度是800万的表里插入数据，速度大约：3.7min / 每1万条
 
 import csv
 import pymysql
