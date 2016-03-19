@@ -1,5 +1,6 @@
 import numpy as np
 import pymysql
+import scipy.spatial
 from sys import argv
 
 # 速度：3.4min / 每1万行
@@ -165,7 +166,7 @@ def sim(cur, usr_id, itm_id):
             else:
 
                 if tm in fea_tms:
-                    usr_fea_vec[fea_tms.get(tm)] = 1
+                    usr_fea_vec[fea_tms.get(tm)] += 1
                 else:
                     pass
 
@@ -224,7 +225,7 @@ def sim(cur, usr_id, itm_id):
             else:
 
                 if tm in fea_tms:
-                    usr_fea_vec[fea_tms.get(tm)] = 1
+                    usr_fea_vec[fea_tms.get(tm)] += 1
                 else:
                     pass
 
@@ -253,8 +254,7 @@ def sim(cur, usr_id, itm_id):
         else:
             pass
 
-    cos = np.sum(usr_fea_vec * itm_fea_vec) / np.sqrt(np.sum(usr_fea_vec) 
-            * np.sum(itm_fea_vec))
+    cos = 1 - scipy.spatial.distance.cosine(usr_fea_vec, itm_fea_vec)
 
     return cos, flag
 
@@ -309,8 +309,9 @@ for ui in tmp_arr:
 
     line += 1
 
-    if line % 1000 == 0:
+    if line % 10000 == 0:
         print("line: ", line)
+        conn.commit()
     else:
         pass
 
