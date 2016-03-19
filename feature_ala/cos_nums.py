@@ -132,6 +132,7 @@ def sim(cur, usr_id, itm_id):
     """
     usr_fea_vec = np.zeros((71,), dtype=np.int32)
     itm_fea_vec = np.zeros((71,), dtype=np.int32)
+    flag = 1
 
     # usr
     sql = "SELECT jobroles, career_level, discipline_id, country, region, industry_id FROM users WHERE id=%d;"
@@ -139,6 +140,7 @@ def sim(cur, usr_id, itm_id):
 
     if stat == 0:
         print("mysql user feature select error")
+        flag = 0
     else:
         fea_all = cur.fetchone()
         tms = fea_all[0]
@@ -198,6 +200,7 @@ def sim(cur, usr_id, itm_id):
 
     if stat == 0:
         print("mysql item feature select error") # may happen
+        flag = 0
     else:
         fea_all = cur.fetchone()
         tms = fea_all[0] + fea_all[1]
@@ -253,7 +256,7 @@ def sim(cur, usr_id, itm_id):
     cos = np.sum(usr_fea_vec * itm_fea_vec) / np.sqrt(np.sum(usr_fea_vec) 
             * np.sum(itm_fea_vec))
 
-    return cos
+    return cos, flag
 
 # establish connect
 conn = pymysql.connect(host="127.0.0.1", port=3306, user="root",
@@ -267,7 +270,7 @@ sql = "SELECT DISTINCT user_id, item_id FROM interactions;"
 stat = cur.execute(sql)
 
 if stat == 0:
-    print("sql execute error")
+    print("mysql distinct <u,i> pair select error")
 else:
     tmp_list = cur.fetchall()
     tmp_arr_2 = np.array(tmp_list)
@@ -288,16 +291,21 @@ for ui in tmp_arr:
     usr_id = int(ui[0])
     itm_id = int(ui[1])
 
-    sql_1 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=1;"
-    tmp_len = cur.execute(sql_1 % (usr_id, itm_id))
-    ui[3] = tmp_len
-
-    sql_2 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=4;"
-    tmp_len = cur.execute(sql_2 % (usr_id, itm_id))
-    ui[4] = tmp_len
-
-    cos = sim(cur=cur, usr_id=usr_id, itm_id=itm_id)
+    cos, flag = sim(cur=cur, usr_id=usr_id, itm_id=itm_id)
     ui[2] = cos
+
+    if flag == 0:
+        ui[3] = 0
+        ui[4] = 0
+    else:
+        sql_1 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=1;"
+        tmp_len = cur.execute(sql_1 % (usr_id, itm_id))
+        ui[3] = tmp_len
+
+        sql_2 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=4;"
+        tmp_len = cur.execute(sql_2 % (usr_id, itm_id))
+        ui[4] = tmp_len
+
 
     line += 1
 
