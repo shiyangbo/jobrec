@@ -1,0 +1,30 @@
+#sql = ""
+#cur.execute(sql)
+#tmp_list = fetchall()
+#
+#tmp_dic = {}
+#
+#for ety in tmp_list:
+#
+#    if len(ety) == 1:
+#        continue
+#    else:
+#        terms = ety.split(",")
+#
+#        for term in terms:
+#
+#            if tmp_dic.has_key(term):
+#                tmp_dic[term] = tmp_dic.get(term) + 1
+#            else:
+#                tmp_dic.update({term: 1})
+
+str = "123\t"
+print(len(str.strip()))
+print(str)
+
+#with open("c:\\users\\admin\\desktop\\list.csv", "r") as tmp_file:
+#    tmp_list = tmp_file.readlines()
+#    tmp_dic = {}
+#    for ety in tmp_list:
+#        ety
+#    print(tmp_list)
