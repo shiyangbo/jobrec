@@ -11,26 +11,26 @@ def fea():
     """5个term文件放在当前目录下
     """
     fea_tms = {}
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_1.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_1.txt", 
             dtype=np.int32)
     fea_tms = dict.fromkeys(tmp_arr, 0)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_2.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_2.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 1)
     fea_tms.update(tmp_dic)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_3.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_3.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 2)
     fea_tms.update(tmp_dic)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_4.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_4.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 3)
     fea_tms.update(tmp_dic)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_5.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_5.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 4)
     fea_tms.update(tmp_dic)
@@ -171,7 +171,7 @@ def sim(cur, usr_id, itm_id):
                     pass
 
         if carr in fea_carr:
-            usr_fea_vec[fea_carr.get(carr)] = 1
+            usr_fea_vec[fea_carr.get(carr)] = carr
         else:
             pass
 
@@ -254,7 +254,12 @@ def sim(cur, usr_id, itm_id):
         else:
             pass
 
-    cos = 1 - scipy.spatial.distance.cosine(usr_fea_vec, itm_fea_vec)
+    if np.sum(usr_fea_vec) == 0:
+        cos = 0.0
+    elif np.sum(itm_fea_vec) == 0:
+        cos = 0.0
+    else:
+        cos = 1 - scipy.spatial.distance.cosine(usr_fea_vec, itm_fea_vec)
 
     return cos, flag
 
@@ -275,7 +280,9 @@ else:
     tmp_list = cur.fetchall()
     tmp_arr_2 = np.array(tmp_list)
     tmp_arr = np.zeros([len(tmp_list), 5], dtype=np.float64)
+    print("tmp_arr is empty")
     tmp_arr[:, 0:2] = tmp_arr_2
+    print("tmp_arr has contained <u,i> pairs")
 
     del tmp_arr_2
     del tmp_list
