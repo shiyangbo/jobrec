@@ -14,8 +14,29 @@
 #cur.close()
 #conn.close()
 
-import scipy.spatial as sysp
-a = [0, 0, 1, 2, 0]
-b = [1, 2, 1, 1, 1]
-cos = sysp.distance.cosine(a, b)
-print(cos)
+#import scipy.spatial as sysp
+#a = [0, 0, 1, 2, 0]
+#b = [1, 2, 1, 1, 1]
+#cos = sysp.distance.cosine(a, b)
+#print(cos)
+
+from sys import argv
+
+script, file_path = argv
+
+with open(file_path + "/re.csv", "r") as tmp_file:
+    tmp_list = []
+
+    n = 0
+    for line in tmp_file.readlines():
+        tmp_str = line.strip().split("\t")
+        cos = float(tmp_str[2])
+        nums_1 = int(float(tmp_str[3]))
+        nums_4 = int(float(tmp_str[4]))
+        tmp_list.append((cos, nums_1, nums_4))
+
+        n += 1
+
+        print(n)
+
+print(len(tmp_list))
