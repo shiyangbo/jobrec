@@ -282,7 +282,7 @@ BEGIN
                     FETCH cur2 into uid, c;
                     WHILE ss <> 1 DO
                         UPDATE sample 
-                        SET usj_dis_3_n = c  
+                        SET usj_cl_3_n = c  
                         WHERE i_career_level = cl 
                         AND serial = ser 
                         AND user_id = uid;

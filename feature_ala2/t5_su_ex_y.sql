@@ -114,7 +114,7 @@ BEGIN
           FROM join_uia
           WHERE ui_week = week1
           AND interaction_type = 4
-          AND u_experience_years_experience = dis
+          AND u_experience_years_experience = ex_y
           GROUP BY item_id;
           DECLARE CONTINUE HANDLER FOR NOT FOUND SET ss = 1;
           OPEN cur2;
