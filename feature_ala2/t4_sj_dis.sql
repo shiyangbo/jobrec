@@ -1,9 +1,10 @@
 -- ----------------------------
--- Procedure structure for t4
+-- Procedure structure for t4_dis
 -- ----------------------------
-DROP PROCEDURE IF EXISTS `t4`;
+DROP PROCEDURE IF EXISTS `t4_dis`;
+DELIMITER //
 CREATE DEFINER = 'root'@'localhost'
-PROCEDURE `t4`()
+PROCEDURE `t4_dis`()
 BEGIN
     DECLARE s int default 0;
     #DECLARE t VARCHAR(300);  
@@ -41,7 +42,7 @@ BEGIN
     DECLARE cur CURSOR FOR 
     SELECT DISTINCT 
       #title 
-      industry_id
+      discipline_id
     #FROM item LIMIT 1;
     FROM item;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET s = 1;
@@ -296,3 +297,7 @@ BEGIN
     END WHILE;
 
 END
+//
+DELIMITER ;
+
+CALL `t4_dis`()
