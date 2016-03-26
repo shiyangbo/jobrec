@@ -1,5 +1,6 @@
 import numpy as np
 import pymysql
+import scipy.spatial
 from sys import argv
 
 # 速度：3.4min / 每1万行
@@ -10,26 +11,26 @@ def fea():
     """5个term文件放在当前目录下
     """
     fea_tms = {}
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_1.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_1.txt", 
             dtype=np.int32)
     fea_tms = dict.fromkeys(tmp_arr, 0)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_2.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_2.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 1)
     fea_tms.update(tmp_dic)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_3.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_3.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 2)
     fea_tms.update(tmp_dic)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_4.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_4.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 3)
     fea_tms.update(tmp_dic)
 
-    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\feature_ala\\term\\dic_5.txt", 
+    tmp_arr = np.loadtxt("d:\\syb\\yun\\jobrec\\test_set\\feature_ala\\term\\dic_5.txt", 
             dtype=np.int32)
     tmp_dic = dict.fromkeys(tmp_arr, 4)
     fea_tms.update(tmp_dic)
@@ -132,6 +133,7 @@ def sim(cur, usr_id, itm_id):
     """
     usr_fea_vec = np.zeros((71,), dtype=np.int32)
     itm_fea_vec = np.zeros((71,), dtype=np.int32)
+    flag = 1
 
     # usr
     sql = "SELECT jobroles, career_level, discipline_id, country, region, industry_id FROM users WHERE id=%d;"
@@ -139,6 +141,7 @@ def sim(cur, usr_id, itm_id):
 
     if stat == 0:
         print("mysql user feature select error")
+        flag = 0
     else:
         fea_all = cur.fetchone()
         tms = fea_all[0]
@@ -163,12 +166,12 @@ def sim(cur, usr_id, itm_id):
             else:
 
                 if tm in fea_tms:
-                    usr_fea_vec[fea_tms.get(tm)] = 1
+                    usr_fea_vec[fea_tms.get(tm)] += 1
                 else:
                     pass
 
         if carr in fea_carr:
-            usr_fea_vec[fea_carr.get(carr)] = 1
+            usr_fea_vec[fea_carr.get(carr)] = carr
         else:
             pass
 
@@ -198,6 +201,7 @@ def sim(cur, usr_id, itm_id):
 
     if stat == 0:
         print("mysql item feature select error") # may happen
+        flag = 0
     else:
         fea_all = cur.fetchone()
         tms = fea_all[0] + fea_all[1]
@@ -221,7 +225,7 @@ def sim(cur, usr_id, itm_id):
             else:
 
                 if tm in fea_tms:
-                    usr_fea_vec[fea_tms.get(tm)] = 1
+                    usr_fea_vec[fea_tms.get(tm)] += 1
                 else:
                     pass
 
@@ -250,10 +254,14 @@ def sim(cur, usr_id, itm_id):
         else:
             pass
 
-    cos = np.sum(usr_fea_vec * itm_fea_vec) / np.sqrt(np.sum(usr_fea_vec) 
-            * np.sum(itm_fea_vec))
+    if np.sum(usr_fea_vec) == 0:
+        cos = 0.0
+    elif np.sum(itm_fea_vec) == 0:
+        cos = 0.0
+    else:
+        cos = 1 - scipy.spatial.distance.cosine(usr_fea_vec, itm_fea_vec)
 
-    return cos
+    return cos, flag
 
 # establish connect
 conn = pymysql.connect(host="127.0.0.1", port=3306, user="root",
@@ -267,12 +275,14 @@ sql = "SELECT DISTINCT user_id, item_id FROM interactions;"
 stat = cur.execute(sql)
 
 if stat == 0:
-    print("sql execute error")
+    print("mysql distinct <u,i> pair select error")
 else:
     tmp_list = cur.fetchall()
     tmp_arr_2 = np.array(tmp_list)
     tmp_arr = np.zeros([len(tmp_list), 5], dtype=np.float64)
+    print("tmp_arr is empty")
     tmp_arr[:, 0:2] = tmp_arr_2
+    print("tmp_arr has contained <u,i> pairs")
 
     del tmp_arr_2
     del tmp_list
@@ -288,21 +298,27 @@ for ui in tmp_arr:
     usr_id = int(ui[0])
     itm_id = int(ui[1])
 
-    sql_1 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=1;"
-    tmp_len = cur.execute(sql_1 % (usr_id, itm_id))
-    ui[3] = tmp_len
-
-    sql_2 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=4;"
-    tmp_len = cur.execute(sql_2 % (usr_id, itm_id))
-    ui[4] = tmp_len
-
-    cos = sim(cur=cur, usr_id=usr_id, itm_id=itm_id)
+    cos, flag = sim(cur=cur, usr_id=usr_id, itm_id=itm_id)
     ui[2] = cos
+
+    if flag == 0:
+        ui[3] = 0
+        ui[4] = 0
+    else:
+        sql_1 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=1;"
+        tmp_len = cur.execute(sql_1 % (usr_id, itm_id))
+        ui[3] = tmp_len
+
+        sql_2 = "SELECT user_id, item_id FROM interactions WHERE user_id=%d AND item_id=%d AND interaction_type=4;"
+        tmp_len = cur.execute(sql_2 % (usr_id, itm_id))
+        ui[4] = tmp_len
+
 
     line += 1
 
-    if line % 1000 == 0:
+    if line % 10000 == 0:
         print("line: ", line)
+        conn.commit()
     else:
         pass
 
